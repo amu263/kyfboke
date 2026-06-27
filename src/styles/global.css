@@ -1,10 +1,10 @@
 /* ==========================================================================
    空予风博客 · 全局样式
    设计原则: dark-stage + spotlight-pink, 编辑型长滚动
-   字体: Zen Maru Gothic (display) + Noto Serif SC (body) + JetBrains Mono
+    字体: Noto Sans SC (text) + JetBrains Mono (code)
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Noto+Serif+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
   /* 调色板: B 站蓝单色系 */
@@ -18,10 +18,9 @@
   --accent-soft:   #5CC6F2;  /* 浅蓝 */
   --accent-glow:   rgba(0, 174, 236, 0.35);  /* glow 用 */
 
-  /* 字体角色 */
-  --font-display: 'Zen Maru Gothic', 'Noto Serif SC', system-ui, sans-serif;
-  --font-body:    'Noto Serif SC', 'PingFang SC', 'Microsoft YaHei', serif;
-  --font-mono:    'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  /* 字体 */
+  --font-text: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
 
   /* 字号阶梯 (1.25 ratio) */
   --fs-xs:  0.8125rem;  /* 13px */
@@ -62,7 +61,7 @@ html, body {
   padding: 0;
   background: var(--ink-deep);
   color: var(--paper);
-  font-family: var(--font-body);
+  font-family: var(--font-text);
   font-size: var(--fs-base);
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
@@ -86,7 +85,7 @@ a {
 a:hover { border-bottom-color: var(--accent); }
 
 h1, h2, h3, h4 {
-  font-family: var(--font-display);
+  font-family: var(--font-text);
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.2;
