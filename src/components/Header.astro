@@ -1,0 +1,170 @@
+---
+/**
+ * 顶部导航
+ */
+const path = Astro.url.pathname;
+const navItems: { href: string; label: string }[] = [
+  { href: '/',          label: '首页' },
+  { href: '/blog',      label: '文章' },
+  { href: '/diary',     label: '直播日记' },
+  { href: '/timeline',  label: '时间线' },
+  { href: '/projects',  label: '作品' },
+  { href: '/gallery',   label: '相册' },
+  { href: '/friends',   label: '友链' },
+];
+
+function isActive(href: string): boolean {
+  if (href === '/') return path === '/' || path === '';
+  return path.startsWith(href);
+}
+---
+<header class="site-header">
+  <div class="bar">
+    <a href="/" class="brand" aria-label="空予风 主页">
+      <span class="brand-dot" aria-hidden="true"></span>
+      <span class="brand-name">空予风</span>
+      <span class="brand-meta">V-streamer</span>
+    </a>
+    <nav aria-label="主导航">
+      <ul>
+        {navItems.map(item => (
+          <li>
+            <a
+              href={item.href}
+              class:list={["nav-link", { "is-active": isActive(item.href) }]}
+              aria-current={isActive(item.href) ? 'page' : undefined}
+            >
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+    <a href="https://space.bilibili.com/1342014656" class="bili" target="_blank" rel="noopener">
+      <span class="bili-dot" aria-hidden="true"></span>
+      B站主页
+    </a>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(15, 26, 46, 0.78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--ink-line);
+  }
+  .bar {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: var(--sp-2) var(--sp-3);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    color: var(--paper);
+    border-bottom: 0;
+    transition: transform 360ms var(--ease-spring);
+  }
+  .brand:hover { border-bottom: 0; transform: scale(1.04); }
+  .brand-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+  .brand-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-md);
+    letter-spacing: 0.02em;
+  }
+  .brand-meta {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--paper-dim);
+    margin-left: var(--sp-1);
+    padding-left: var(--sp-1);
+    border-left: 1px solid var(--ink-line);
+  }
+
+  nav { flex: 1; }
+  nav ul {
+    list-style: none;
+    margin: 0; padding: 0;
+    display: flex;
+    gap: var(--sp-3);
+    justify-content: center;
+  }
+  .nav-link {
+    color: var(--paper-dim);
+    font-size: var(--fs-sm);
+    border-bottom: 0;
+    padding: 4px 0;
+    position: relative;
+    transition: color 200ms ease, transform 320ms var(--ease-spring);
+    display: inline-block;
+  }
+  .nav-link:hover { color: var(--paper); border-bottom: 0; transform: translateY(-1px) scale(1.04); }
+  .nav-link.is-active {
+    color: var(--paper);
+  }
+  .nav-link.is-active::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: -4px;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  .bili {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--fs-sm);
+    color: var(--paper-dim);
+    border: 1px solid var(--ink-line);
+    border-radius: var(--r-sm);
+    padding: 6px 12px;
+    transition:
+      transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      background 220ms ease,
+      color 220ms ease,
+      border-color 220ms ease,
+      box-shadow 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: transform;
+  }
+  .bili:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    border-bottom-color: var(--accent);
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 8px 20px -12px var(--accent-glow);
+  }
+  .bili-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.7); }
+  }
+
+  @media (max-width: 720px) {
+    .bar { flex-wrap: wrap; gap: var(--sp-2); }
+    nav { order: 3; width: 100%; }
+    nav ul { justify-content: flex-start; flex-wrap: wrap; gap: var(--sp-2); }
+    .brand-meta { display: none; }
+  }
+</style>

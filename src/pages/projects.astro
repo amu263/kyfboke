@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import projectsData from '../data/projects.json';
+
+const projects = projectsData.items || projectsData;
+const intro = projectsData.intro || '翻唱、剪辑、设计。';
+---
+<BaseLayout title="作品" description="翻唱 / 剪辑 / 设计 / 杂项">
+  <header class="head">
+    <p class="eyebrow">做过的 / 正在做的</p>
+    <h1>作品</h1>
+    <p class="lede">{intro}</p>
+  </header>
+
+  <ul class="grid">
+    {projects.map(p => (
+      <li class="card">
+        <span class="kind">{p.kind}</span>
+        <h3>{p.title}</h3>
+        <p class="note">{p.note}</p>
+        <time datetime={p.date}>{p.date}</time>
+      </li>
+    ))}
+  </ul>
+</BaseLayout>
+
+<style>
+  .head { padding-bottom: var(--sp-3); border-bottom: 1px solid var(--ink-line); margin-bottom: var(--sp-4); }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 0 0 var(--sp-1);
+  }
+  .head h1 { margin: 0 0 var(--sp-2); }
+  .lede { color: var(--paper-dim); margin: 0; }
+
+  .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--sp-2); }
+  .card {
+    background: var(--ink-surface);
+    border: 1px solid var(--ink-line);
+    border-radius: var(--r-md);
+    padding: var(--sp-3);
+    transition: border-color 180ms ease, transform 180ms ease;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .kind {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--accent-soft);
+    border: 1px solid var(--accent-soft);
+    padding: 1px 8px;
+    border-radius: 999px;
+  }
+  .card h3 { margin: var(--sp-2) 0 6px; font-size: var(--fs-md); }
+  .note { color: var(--paper-dim); margin: 0 0 var(--sp-2); font-size: var(--fs-sm); }
+  .card time { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--paper-dim); }
+</style>

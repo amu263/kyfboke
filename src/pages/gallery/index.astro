@@ -1,0 +1,66 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import GalleryGrid from '../../components/GalleryGrid.astro';
+import { loadGallery } from '../../utils/gallery';
+import { join } from 'node:path';
+
+// Astro build 中 process.cwd() 即项目根目录
+const items = await loadGallery(join(process.cwd(), 'public'));
+---
+<BaseLayout title="相册" description="空予风的图片收藏">
+  <header class="head">
+    <p class="eyebrow">画廊</p>
+    <h1>相册</h1>
+    <p class="lede">
+      把喜欢的图收在这里。往 <code>public/gallery/</code> 里丢图就会自动出现 — 不用写任何配置文件。
+      当前共 <strong>{items.length}</strong> 张。
+    </p>
+  </header>
+
+  {items.length === 0 ? (
+    <div class="empty">
+      <p>相册还是空的。</p>
+      <p class="empty-hint">把图片复制到 <code>public/gallery/</code> 文件夹即可,支持 <code>.jpg .png .webp .gif .avif</code>。</p>
+    </div>
+  ) : (
+    <GalleryGrid items={items} />
+  )}
+</BaseLayout>
+
+<style>
+  .head {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 var(--sp-3);
+    margin-bottom: var(--sp-4);
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 0 0 var(--sp-1);
+  }
+  .head h1 { margin: 0 0 var(--sp-2); }
+  .lede {
+    color: var(--paper-dim);
+    max-width: 60ch;
+    margin: 0;
+  }
+  .lede code {
+    font-size: 0.95em;
+  }
+  .empty {
+    max-width: 600px;
+    margin: var(--sp-5) auto;
+    padding: var(--sp-5) var(--sp-3);
+    text-align: center;
+    background: var(--ink-surface);
+    border: 1px dashed var(--ink-line);
+    border-radius: var(--r-md);
+    color: var(--paper-dim);
+  }
+  .empty p { margin: 0 0 var(--sp-2); }
+  .empty-hint { font-size: var(--fs-sm); }
+</style>

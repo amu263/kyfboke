@@ -1,0 +1,472 @@
+---
+/**
+ * 时间树思维节点云图
+ * - 布局: 最早的文章在中心, 后面的按时间向外辐射, 像年轮/树杈
+ * - 交互: hover 触发枝杈波动 (沿边传播的脉冲)
+ */
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog'))
+  .filter(p => !p.data.draft)
+  .sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf()); // 最早 -> 最新
+
+// ---- 节点构造 ----
+interface Node {
+  id: string;
+  kind: 'post' | 'tag';
+  label: string;
+  summary?: string;
+  href: string;
+  /** 首次出现时间 (ms) */
+  birth: number;
+  /** 树中的层级 (0 = 中心) */
+  level: number;
+}
+
+interface Edge {
+  from: string;
+  to: string;
+}
+
+const nodes: Node[] = [];
+const edges: Edge[] = [];
+
+// 1. 先把所有文章按时间排, 给每个文章分配 level
+//    level 0 = 最早的文章 (中心)
+//    level 1, 2, ... = 后续文章
+posts.forEach((p, i) => {
+  nodes.push({
+    id: `post:${p.slug}`,
+    kind: 'post',
+    label: p.data.title,
+    summary: p.data.summary,
+    href: `/blog/${p.slug}/`,
+    birth: p.data.date.valueOf(),
+    level: i, // 第 i 篇 = 第 i 层
+  });
+});
+
+// 2. tag 节点: 首次出现的文章的 level + 1 (在所属文章的外圈)
+const tagLevelOfBirth: Record<string, number> = {};
+for (const p of posts) {
+  for (const t of p.data.tags) {
+    const tagId = `tag:${t}`;
+    if (!(tagId in tagLevelOfBirth)) {
+      // 这是这个 tag 第一次出现
+      const postLevel = nodes.find(n => n.id === `post:${p.slug}`)!.level;
+      tagLevelOfBirth[tagId] = postLevel + 1;
+      nodes.push({
+        id: tagId,
+        kind: 'tag',
+        label: `#${t}`,
+        href: `/blog?tag=${encodeURIComponent(t)}`,
+        birth: p.data.date.valueOf(),
+        level: postLevel + 1,
+      });
+    }
+  }
+}
+
+// 3. 边: 文章 -> 它的 tags
+for (const p of posts) {
+  for (const t of p.data.tags) {
+    edges.push({ from: `post:${p.slug}`, to: `tag:${t}` });
+  }
+}
+
+// ---- 布局: 时间树 ----
+// 中心 (0,0), 半径按 level 递增
+const MAX_LEVEL = Math.max(...nodes.map(n => n.level));
+const RADIUS_STEP = 78;
+const CX = 210, CY = 210;
+
+// 同 level 的节点按 birth 排角度
+const byLevel: Record<number, Node[]> = {};
+for (const n of nodes) {
+  if (!byLevel[n.level]) byLevel[n.level] = [];
+  byLevel[n.level].push(n);
+}
+// 中心点只有一个, level 0 应该有 1 个, level >=1 可能有多个
+const pos: Record<string, { x: number; y: number; angle: number }> = {};
+
+// level 0 节点 (中心)
+if (byLevel[0] && byLevel[0].length > 0) {
+  const n = byLevel[0][0];
+  pos[n.id] = { x: CX, y: CY, angle: 0 };
+}
+
+// level >= 1 节点: 在外圈, 按 birth 时间分配角度
+// 每个 level 在 360° 中切等份; 同一篇文章的 tags 共享一段连续的弧
+// 策略: 把同 level 的节点按 birth 排序, 等角度切
+for (let lvl = 1; lvl <= MAX_LEVEL; lvl++) {
+  const group = (byLevel[lvl] || []).slice().sort((a, b) => a.birth - b.birth);
+  if (group.length === 0) continue;
+  const radius = RADIUS_STEP * lvl;
+  // 让 level 1 的弧从 -90° 开始 (12 点钟方向) 顺时针展开, 看起来"长出来"
+  const baseAngle = -Math.PI / 2;
+  group.forEach((n, i) => {
+    const angle = baseAngle + (i / group.length) * Math.PI * 2;
+    pos[n.id] = {
+      x: CX + Math.cos(angle) * radius,
+      y: CY + Math.sin(angle) * radius,
+      angle: angle,
+    };
+  });
+}
+
+// ---- 邻居表 (供 hover 联动) ----
+const neighbors: Record<string, Set<string>> = {};
+for (const n of nodes) neighbors[n.id] = new Set();
+for (const e of edges) {
+  neighbors[e.from].add(e.to);
+  neighbors[e.to].add(e.from);
+}
+// 序列化用于 SSR 注入 data-neighbors
+const neighborsAttr: Record<string, string> = {};
+for (const id in neighbors) neighborsAttr[id] = Array.from(neighbors[id]).join(',');
+---
+<div class="tg-root">
+  <svg
+    class="taggraph"
+    viewBox="0 0 420 420"
+    xmlns="http://www.w3.org/2000/svg"
+    role="img"
+    aria-label="文章与标签时间树"
+  >
+    <defs>
+      <!-- 边的颜色渐变: 从源到目标 -->
+      <radialGradient id="tg-center-glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.45" />
+        <stop offset="60%" stop-color="var(--accent)" stop-opacity="0.10" />
+        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0" />
+      </radialGradient>
+    </defs>
+
+    <!-- 中心光晕 -->
+    {byLevel[0] && byLevel[0].length > 0 && (
+      <circle
+        class="tg-center-glow"
+        cx={CX} cy={CY} r="46"
+        fill="url(#tg-center-glow)"
+      />
+    )}
+
+    <!-- 同心环参考 (极淡的层级提示) -->
+    {Array.from({ length: MAX_LEVEL + 1 }).map((_, i) => (
+      <circle
+        class="tg-ring"
+        cx={CX} cy={CY}
+        r={RADIUS_STEP * i}
+        fill="none"
+        stroke="var(--accent)"
+        stroke-opacity="0.06"
+        stroke-width="1"
+        stroke-dasharray="2 4"
+      />
+    ))}
+
+    <!-- 边 -->
+    <g class="tg-edges">
+      {edges.map((e, idx) => {
+        const a = pos[e.from], b = pos[e.to];
+        // 边的"流动"效果: 用 stroke-dasharray, hover 时改变 stroke-dashoffset
+        const length = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
+        return (
+          <line
+            class={`tg-edge tg-edge-${e.from} tg-edge-${e.to}`}
+            data-from={e.from}
+            data-to={e.to}
+            x1={a.x.toFixed(2)} y1={a.y.toFixed(2)}
+            x2={b.x.toFixed(2)} y2={b.y.toFixed(2)}
+            stroke-dasharray={`${length} ${length}`}
+            stroke-dashoffset="0"
+            style={`--len:${length.toFixed(2)}`}
+          />
+        );
+      })}
+    </g>
+
+    <!-- 节点 -->
+    <g class="tg-nodes">
+      {nodes.map(n => {
+        const p = pos[n.id];
+        const isCenter = n.level === 0;
+        return (
+          <g class={`tg-node tg-node-kind-${n.kind} ${isCenter ? 'tg-node--center' : ''}`} data-id={n.id} data-neighbors={neighborsAttr[n.id] || ''} transform={`translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`}>
+            <a href={n.href} class="tg-node-hit" aria-label={n.label}>
+              <circle
+                class="tg-node-glow"
+                r={n.kind === 'post' ? 26 : 18}
+                fill="url(#tg-center-glow)"
+              />
+              <circle
+                class="tg-node-dot"
+                r={n.kind === 'post' ? (isCenter ? 12 : 9) : 5.5}
+              />
+              <text
+                class="tg-node-label"
+                y={n.kind === 'post' ? 30 : 18}
+                text-anchor="middle"
+              >
+                {n.label}
+              </text>
+              {n.summary && (
+                <text
+                  class="tg-node-summary"
+                  y={n.kind === 'post' ? 46 : 32}
+                  text-anchor="middle"
+                >
+                  {n.summary.length > 20 ? n.summary.slice(0, 20) + '…' : n.summary}
+                </text>
+              )}
+            </a>
+          </g>
+        );
+      })}
+    </g>
+  </svg>
+</div>
+
+<script>
+  // 枝杈波动 hover 动画
+  // - hover 一个节点: 该节点放大, summary 显示
+  // - 沿边传出一道波 (stroke-dashoffset 动画 + 边的颜色变化)
+  // - 1 跳邻居节点被波"击中"后短暂脉冲
+  // - 2 跳邻居延迟 120ms 再次传播
+
+  type NodeEl = SVGGElement;
+  type EdgeEl = SVGLineElement;
+
+  function activate(root: Element, id: string) {
+    const node = root.querySelector(`[data-id="${CSS.escape(id)}"]`) as NodeEl | null;
+    if (!node) return;
+    node.classList.add('is-hover');
+    const neighborIds = (node.dataset.neighbors || '').split(',').filter(Boolean);
+
+    // 1) 直接边 + 直接邻居节点
+    neighborIds.forEach(nid => {
+      // 找到这条边
+      const edge = root.querySelector(
+        `line.tg-edge[data-from="${CSS.escape(id)}"][data-to="${CSS.escape(nid)}"],` +
+        `line.tg-edge[data-from="${CSS.escape(nid)}"][data-to="${CSS.escape(id)}"]`
+      ) as EdgeEl | null;
+      if (edge) {
+        edge.classList.add('is-active');
+        // 触发波纹动画: 通过移除再加 class 重启动画
+        edge.classList.remove('wave');
+        // force reflow
+        void (edge as unknown as HTMLElement).getBoundingClientRect();
+        edge.classList.add('wave');
+      }
+      // 邻居节点脉冲
+      const neighborNode = root.querySelector(`[data-id="${CSS.escape(nid)}"]`) as NodeEl | null;
+      if (neighborNode) {
+        neighborNode.classList.remove('pulse');
+        void (neighborNode as unknown as HTMLElement).getBoundingClientRect();
+        neighborNode.classList.add('pulse');
+      }
+    });
+
+    // 2) 2 跳邻居: 延迟 140ms 后, 再传一道波 (从 1 跳邻居向外)
+    setTimeout(() => {
+      neighborIds.forEach(nid => {
+        const nidNode = root.querySelector(`[data-id="${CSS.escape(nid)}"]`) as NodeEl | null;
+        if (!nidNode) return;
+        const nidNeighbors = (nidNode.dataset.neighbors || '').split(',').filter(Boolean);
+        nidNeighbors.forEach(nid2 => {
+          if (nid2 === id) return; // 不反向传播回原点
+          const edge2 = root.querySelector(
+            `line.tg-edge[data-from="${CSS.escape(nid)}"][data-to="${CSS.escape(nid2)}"],` +
+            `line.tg-edge[data-from="${CSS.escape(nid2)}"][data-to="${CSS.escape(nid)}"]`
+          ) as EdgeEl | null;
+          if (edge2 && !edge2.classList.contains('is-active')) {
+            edge2.classList.add('is-active', 'wave');
+          }
+          const n2 = root.querySelector(`[data-id="${CSS.escape(nid2)}"]`) as NodeEl | null;
+          if (n2 && !n2.classList.contains('pulse')) {
+            n2.classList.add('pulse');
+          }
+        });
+      });
+    }, 140);
+  }
+
+  function deactivate(root: Element, id: string) {
+    const node = root.querySelector(`[data-id="${CSS.escape(id)}"]`) as NodeEl | null;
+    if (node) node.classList.remove('is-hover');
+    // 250ms 后清理所有波, 让波动有回响再淡出
+    setTimeout(() => {
+      root.querySelectorAll('.is-active, .pulse').forEach(el => {
+        el.classList.remove('is-active', 'wave', 'pulse');
+      });
+    }, 260);
+  }
+
+  function init() {
+    document.querySelectorAll('.tg-root').forEach((root) => {
+      root.querySelectorAll('.tg-node').forEach((node) => {
+        const id = (node as HTMLElement).dataset.id;
+        if (!id) return;
+        node.addEventListener('mouseenter', () => activate(root, id));
+        node.addEventListener('mouseleave', () => deactivate(root, id));
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+</script>
+
+<style>
+  .tg-root {
+    width: 100%;
+    height: 100%;
+  }
+
+  .taggraph {
+    width: 100%;
+    height: 100%;
+    max-width: 480px;
+    max-height: 480px;
+    display: block;
+    overflow: visible;
+    animation: tg-in 700ms cubic-bezier(0.34, 1.2, 0.64, 1) both;
+  }
+  @keyframes tg-in {
+    from { opacity: 0; transform: scale(0.88); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* 边: 默认状态 */
+  .tg-edge {
+    stroke: var(--accent);
+    stroke-opacity: 0.22;
+    stroke-width: 1;
+    transition: stroke-opacity 320ms ease, stroke-width 320ms ease;
+    pointer-events: none;
+  }
+
+  /* 节点 */
+  .tg-node {
+    cursor: pointer;
+    transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .tg-node-hit {
+    text-decoration: none;
+  }
+  .tg-node-dot {
+    fill: var(--accent);
+    stroke: var(--accent);
+    stroke-width: 1;
+    transition:
+      r 380ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      fill 320ms ease,
+      stroke 320ms ease,
+      stroke-width 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .tg-node--center .tg-node-dot {
+    stroke-width: 2;
+  }
+  .tg-node-kind-tag .tg-node-dot {
+    fill: var(--ink-deep);
+    stroke: var(--accent);
+    stroke-width: 1.5;
+  }
+  .tg-node-glow {
+    opacity: 0;
+    transition: opacity 320ms ease;
+  }
+  .tg-node-label {
+    fill: var(--paper);
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    pointer-events: none;
+    opacity: 0.85;
+    transition: opacity 280ms ease, font-size 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .tg-node-summary {
+    fill: var(--paper-dim);
+    font-family: var(--font-body);
+    font-size: 10px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ====== hover 高亮 ====== */
+  /* 当前 hover 节点: 节点 + 标签 + summary 出现 */
+  .tg-node.is-hover .tg-node-dot {
+    r: 14;
+    fill: var(--accent);
+    stroke-width: 2.5;
+  }
+  .tg-node.is-hover.tg-node-kind-tag .tg-node-dot {
+    r: 8;
+  }
+  .tg-node.is-hover .tg-node-label {
+    opacity: 1;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .tg-node.is-hover .tg-node-summary {
+    opacity: 1;
+  }
+  .tg-node.is-hover .tg-node-glow {
+    opacity: 1;
+  }
+  /* 当前 hover 节点放大 */
+  .tg-node.is-hover {
+    transform: scale(1.15);
+  }
+
+  /* 邻居节点脉冲: 短暂放大后回弹 */
+  .tg-node.pulse .tg-node-dot {
+    animation: tg-pulse 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .tg-node.pulse .tg-node-glow {
+    animation: tg-pulse-glow 480ms ease-out;
+  }
+  @keyframes tg-pulse {
+    0%   { transform: scale(1); }
+    35%  { transform: scale(1.45); }
+    100% { transform: scale(1); }
+  }
+  @keyframes tg-pulse-glow {
+    0%   { opacity: 0; }
+    35%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  /* 边激活 + 波动 */
+  .tg-edge.is-active {
+    stroke-opacity: 0.85;
+    stroke-width: 1.8;
+    filter: drop-shadow(0 0 4px var(--accent-glow));
+  }
+  /* 波动: stroke-dashoffset 从 +length 到 -length, 看起来"一道亮光流过" */
+  .tg-edge.wave {
+    animation: tg-wave 700ms cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  }
+  @keyframes tg-wave {
+    0%   { stroke-dashoffset: var(--len, 100); }
+    100% { stroke-dashoffset: calc(var(--len, 100) * -1); }
+  }
+
+  /* 减弱动效 */
+  @media (prefers-reduced-motion: reduce) {
+    .taggraph { animation: none; }
+    .tg-edge, .tg-node, .tg-node-dot, .tg-node-label, .tg-node-summary, .tg-node-glow {
+      transition: none;
+    }
+    .tg-edge.wave, .tg-node.pulse .tg-node-dot, .tg-node.pulse .tg-node-glow {
+      animation: none;
+    }
+  }
+</style>

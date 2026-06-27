@@ -1,0 +1,69 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import diaryData from '../data/diary.json';
+
+const entries = diaryData.items || diaryData;
+const intro = diaryData.intro || '把每天直播后的一点心情,简短地记下来。';
+---
+<BaseLayout title="直播日记" description="空予风的直播日记">
+  <header class="head">
+    <p class="eyebrow">直播之后</p>
+    <h1>直播日记</h1>
+    <p class="lede">{intro}</p>
+  </header>
+
+  <ol class="entries">
+    {entries.map(e => (
+      <li class="entry">
+        <div class="entry-meta">
+          <time datetime={e.date}>{e.date}</time>
+          <span class="mood">{e.mood}</span>
+        </div>
+        <h2>{e.title}</h2>
+        <p>{e.body}</p>
+      </li>
+    ))}
+  </ol>
+</BaseLayout>
+
+<style>
+  .head { padding-bottom: var(--sp-3); border-bottom: 1px solid var(--ink-line); margin-bottom: var(--sp-4); }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 0 0 var(--sp-1);
+  }
+  .head h1 { margin: 0 0 var(--sp-2); }
+  .lede { color: var(--paper-dim); margin: 0; max-width: 60ch; }
+
+  .entries { list-style: none; margin: 0; padding: 0; }
+  .entry {
+    padding: var(--sp-3) 0;
+    border-bottom: 1px solid var(--ink-line);
+  }
+  .entry:last-child { border-bottom: 0; }
+  .entry-meta {
+    display: flex;
+    gap: var(--sp-2);
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .entry time {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--paper-dim);
+  }
+  .mood {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--accent-soft);
+    border: 1px solid var(--accent-soft);
+    padding: 1px 8px;
+    border-radius: 999px;
+  }
+  .entry h2 { font-family: var(--font-display); margin: 0 0 8px; font-size: var(--fs-md); }
+  .entry p { margin: 0; color: var(--paper-dim); }
+</style>

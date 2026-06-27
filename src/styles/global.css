@@ -1,0 +1,143 @@
+/* ==========================================================================
+   空予风博客 · 全局样式
+   设计原则: dark-stage + spotlight-pink, 编辑型长滚动
+   字体: Zen Maru Gothic (display) + Noto Serif SC (body) + JetBrains Mono
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Noto+Serif+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* 调色板: B 站蓝单色系 */
+  --ink-deep:      #0F1A2E;  /* 主背景, 偏冷的夜蓝 */
+  --ink-surface:   #15243D;  /* 卡片/抬起表面 */
+  --ink-elevated:  #1E3050;  /* 悬浮表面 */
+  --ink-line:      #2B4368;  /* 描边、分隔线 */
+  --paper:         #DDE3EB;  /* 灰白文字 */
+  --paper-dim:     #A5B0BF;  /* 次级灰白文字 */
+  --accent:        #00AEEC;  /* B 站主蓝, 主强调 */
+  --accent-soft:   #5CC6F2;  /* 浅蓝 */
+  --accent-glow:   rgba(0, 174, 236, 0.35);  /* glow 用 */
+
+  /* 字体角色 */
+  --font-display: 'Zen Maru Gothic', 'Noto Serif SC', system-ui, sans-serif;
+  --font-body:    'Noto Serif SC', 'PingFang SC', 'Microsoft YaHei', serif;
+  --font-mono:    'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  /* 字号阶梯 (1.25 ratio) */
+  --fs-xs:  0.8125rem;  /* 13px */
+  --fs-sm:  0.9375rem;  /* 15px */
+  --fs-base:1.0625rem;  /* 17px (中文易读) */
+  --fs-md:  1.25rem;    /* 20px */
+  --fs-lg:  1.625rem;   /* 26px */
+  --fs-xl:  2.25rem;    /* 36px */
+  --fs-2xl: 3.5rem;     /* 56px */
+  --fs-3xl: 5rem;       /* 80px */
+
+  /* 间距 */
+  --sp-1: 0.5rem;
+  --sp-2: 1rem;
+  --sp-3: 1.5rem;
+  --sp-4: 2.5rem;
+  --sp-5: 4rem;
+  --sp-6: 6rem;
+
+  /* 圆角 (刻意保留小圆角, 与 broadsheet 默认的 0 区分) */
+  --r-sm: 6px;
+  --r-md: 12px;
+  --r-lg: 20px;
+
+  /* 阴影 (蓝色调, 不用默认黑) */
+  --shadow-glow: 0 0 32px -8px var(--accent-glow);
+  --shadow-card: 0 8px 24px -12px rgba(15, 26, 46, 0.5);
+
+  /* 缓动 — 弹性回弹 (Mizuki 风格) */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-bounce:  cubic-bezier(0.4, 1.3, 0.6, 1);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--ink-deep);
+  color: var(--paper);
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  /* 整页极轻蓝色辉光 (B 站蓝单色) */
+  background-image:
+    radial-gradient(ellipse 1200px 600px at 20% -10%, var(--accent-glow), transparent),
+    radial-gradient(ellipse 800px 400px at 100% 50%, rgba(0, 174, 236, 0.06), transparent);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 160ms ease, color 160ms ease, transform 360ms var(--ease-spring);
+}
+a:hover { border-bottom-color: var(--accent); }
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin: 0 0 var(--sp-3);
+}
+
+h1 { font-size: var(--fs-2xl); }
+h2 { font-size: var(--fs-xl); }
+h3 { font-size: var(--fs-lg); }
+
+code, pre {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+pre {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--ink-surface);
+  border: 1px solid var(--ink-line);
+  border-radius: var(--r-sm);
+  overflow-x: auto;
+}
+:not(pre) > code {
+  background: var(--ink-surface);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--accent-soft);
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: var(--ink-line);
+  margin: var(--sp-4) 0;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+/* 可访问性: 用户偏好减少动效时 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* 焦点环: 全键盘可见 */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}

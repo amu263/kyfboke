@@ -1,0 +1,417 @@
+---
+/**
+ * 首页 Hero + 标签思维节点云图
+ */
+import TagGraph from './TagGraph.astro';
+
+interface Props {
+  name?: string;
+  tagline?: string;
+}
+const {
+  name = '空予风',
+  tagline = '在直播间里讲故事的人',
+} = Astro.props;
+---
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-meta" data-room="24941829">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="live" id="hero-live-text">直播信号 · 待发射</span>
+    </div>
+
+    <h1 class="hero-title">
+      <span class="hero-title-row">
+        <span class="zh">{name}</span>
+        <span class="hero-avatar" aria-hidden="true">
+          <img src="/avatar.jpg" alt="" loading="lazy" decoding="async" />
+        </span>
+      </span>
+      <span class="en">kong yu feng</span>
+    </h1>
+
+    <p class="hero-tag">{tagline}</p>
+
+    <div class="hero-actions">
+      <a class="btn btn--primary" href="/blog">
+        <span>翻翻文章</span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="btn btn--ghost btn--bili" href="https://live.bilibili.com/24941829" target="_blank" rel="noopener">
+        <svg class="bili-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <!-- 哔哩哔哩 小电视矢量图标 -->
+          <!-- 天线 -->
+          <line x1="6"  y1="3" x2="8"  y2="6"  stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="18" y1="3" x2="16" y2="6"  stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <!-- 圆点 -->
+          <circle cx="7"  cy="3.4" r="1.1" fill="currentColor"/>
+          <circle cx="17" cy="3.4" r="1.1" fill="currentColor"/>
+          <!-- 屏幕外壳 -->
+          <rect x="2.5" y="6.5" width="19" height="13" rx="2.4" fill="currentColor"/>
+          <!-- 屏幕内 (留出主体蓝) -->
+          <rect x="4.5" y="8.5" width="15" height="9" rx="1" fill="var(--ink-deep)"/>
+          <!-- 屏幕条纹 -->
+          <rect x="6.2"  y="10.3" width="1.6" height="5.4" rx="0.6" fill="currentColor"/>
+          <rect x="9"    y="10.3" width="1.6" height="5.4" rx="0.6" fill="currentColor"/>
+          <rect x="11.8" y="10.3" width="1.6" height="5.4" rx="0.6" fill="currentColor"/>
+          <rect x="14.6" y="10.3" width="1.6" height="5.4" rx="0.6" fill="currentColor"/>
+          <!-- 底座 -->
+          <rect x="9" y="19.5" width="6" height="1.4" rx="0.6" fill="currentColor"/>
+        </svg>
+        <span>直播间</span>
+      </a>
+    </div>
+
+    <!-- 签名元素: 文章 + 标签 思维节点云图 -->
+    <div class="taggraph-wrap">
+      <TagGraph />
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 78vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 70% 30%, rgba(0, 174, 236, 0.18), transparent 50%),
+      radial-gradient(circle at 30% 70%, rgba(0, 174, 236, 0.08), transparent 60%),
+      var(--ink-deep);
+  }
+  .hero::before {
+    /* 极细栅格背景, 暗示直播信号 */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    position: relative;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: var(--sp-6) var(--sp-3);
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: var(--sp-5);
+    align-items: center;
+  }
+
+  .hero-meta {
+    grid-column: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border: 1px solid var(--ink-line);
+    border-radius: 999px;
+    width: max-content;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--paper-dim);
+    margin-bottom: var(--sp-3);
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: blink 1.6s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* 直播中状态 */
+  .hero-meta.is-live { border-color: rgba(0, 200, 100, 0.4); color: #a0e0c0; }
+  .hero-meta.is-live .dot {
+    background: #00c864;
+    box-shadow: 0 0 12px #00c864;
+    animation: pulse-live 1s ease-in-out infinite;
+  }
+  @keyframes pulse-live {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.3); }
+  }
+
+  .hero-title {
+    grid-column: 1;
+    margin: 0 0 var(--sp-2);
+    line-height: 0.95;
+  }
+  .hero-title-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28em;
+  }
+  .hero-title .zh {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(4rem, 11vw, var(--fs-3xl));
+    letter-spacing: -0.02em;
+    background: linear-gradient(180deg, var(--paper) 30%, rgba(221, 227, 235, 0.55) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* hover 时向左滑动, 与头像入场错位 */
+    transition: transform 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: transform;
+  }
+  /* 圆框头像: 紧贴 .zh 右侧, 大小 = .zh 文字宽度 (客户端 JS 量算后写到 --hero-avatar-size) */
+  .hero-avatar {
+    display: inline-block;
+    width: var(--hero-avatar-size, 60px);
+    height: var(--hero-avatar-size, 60px);
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+    flex: 0 0 auto;
+    opacity: 0;
+    transform: translateX(40px) scale(0.94);
+    pointer-events: none;
+    transition:
+      opacity 980ms cubic-bezier(0.4, 1.1, 0.6, 1),
+      transform 980ms cubic-bezier(0.4, 1.1, 0.6, 1);
+  }
+  .hero-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+  /* hover 触发: 文字左滑, 头像右滑入 + 淡入 (慢动画, 保留丝滑回弹) */
+  .hero-title-row:hover .zh,
+  .hero-title-row:focus-within .zh {
+    transform: translateX(-12px);
+    transition: transform 980ms cubic-bezier(0.4, 1.1, 0.6, 1);
+  }
+  .hero-title-row:hover .hero-avatar,
+  .hero-title-row:focus-within .hero-avatar {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  .hero-title .en {
+    display: block;
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: var(--fs-sm);
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--paper-dim);
+    margin-top: var(--sp-2);
+  }
+
+  .hero-tag {
+    grid-column: 1;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--fs-md);
+color: var(--accent-soft);
+    margin: 0 0 var(--sp-4);
+    max-width: 32ch;
+  }
+
+  .hero-actions {
+    grid-column: 1;
+    display: flex;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: var(--r-sm);
+    font-size: var(--fs-sm);
+    border: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+    /* 弹簧/弹性过渡: cubic-bezier 末尾超过 1,产生轻微回弹 */
+    transition:
+      transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      background 220ms ease,
+      color 220ms ease,
+      border-color 220ms ease,
+      box-shadow 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: transform;
+  }
+  .btn--primary {
+    background: var(--accent);
+    color: var(--ink-deep);
+    font-weight: 500;
+  }
+  .btn--primary:hover {
+    background: var(--accent-soft);
+    border-bottom-color: var(--accent-soft);
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 10px 24px -10px var(--accent-glow);
+  }
+  .btn--ghost {
+    border-color: var(--ink-line);
+    color: var(--paper);
+  }
+  .btn--ghost:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 10px 24px -12px var(--accent-glow);
+  }
+
+  /* 哔哩哔哩图标按钮 */
+  .btn--bili {
+    gap: 10px;
+  }
+  .bili-icon {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    color: var(--accent);
+    transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .btn--bili:hover .bili-icon {
+    /* 小电视弹一下 + 轻微摇摆 */
+    transform: translateY(-2px) rotate(-8deg) scale(1.08);
+    animation: biliwiggle 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 1;
+  }
+  @keyframes biliwiggle {
+    0%   { transform: translateY(-2px) rotate(0deg)    scale(1.08); }
+    25%  { transform: translateY(-3px) rotate(-12deg)  scale(1.10); }
+    55%  { transform: translateY(-2px) rotate(8deg)    scale(1.08); }
+    80%  { transform: translateY(-2px) rotate(-4deg)   scale(1.07); }
+    100% { transform: translateY(-2px) rotate(-8deg)   scale(1.08); }
+  }
+  .arrow {
+    transition: transform 320ms var(--ease-spring);
+  }
+  .btn--primary:hover .arrow {
+    transform: translateX(4px);
+  }
+
+  /* 签名元素: 文章 + 标签 思维节点云图 */
+  .taggraph-wrap {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    position: relative;
+    aspect-ratio: 1;
+    max-width: 460px;
+    width: 100%;
+    justify-self: center;
+    align-self: center;
+    /* 极轻的虚化光环, 暗示"云图" */
+    background: radial-gradient(circle at 50% 50%, rgba(0, 174, 236, 0.06), transparent 70%);
+    border-radius: 50%;
+  }
+
+  @media (max-width: 720px) {
+    .hero { min-height: auto; }
+    .hero-inner {
+      grid-template-columns: 1fr;
+      padding: var(--sp-5) var(--sp-3);
+    }
+    .taggraph-wrap {
+      grid-column: 1;
+      grid-row: auto;
+      max-width: 320px;
+      margin: var(--sp-4) auto 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-meta, .hero-title, .hero-tag, .hero-actions, .taggraph-wrap { animation: none !important; }
+  }
+
+  /* Mizuki 式交错入场 */
+  .hero-meta, .hero-title, .hero-tag, .hero-actions, .taggraph-wrap {
+    animation: hero-in 600ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  .hero-meta      { animation-delay: 100ms; }
+  .hero-title     { animation-delay: 200ms; }
+  .hero-tag       { animation-delay: 350ms; }
+  .hero-actions   { animation-delay: 450ms; }
+  .taggraph-wrap  { animation-delay: 600ms; }
+
+  @keyframes hero-in {
+    from { opacity: 0; transform: translateY(1.5rem); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<script>
+  // ── Bilibili 直播状态轮询 ──
+  const ROOM_ID = 24941829;
+  const LIVE_API = `https://api.live.bilibili.com/room/v1/Room/room_init?id=${ROOM_ID}`;
+
+  function updateLiveStatus(liveStatus: number) {
+    const meta = document.querySelector<HTMLElement>('.hero-meta');
+    const text = document.getElementById('hero-live-text');
+    if (!meta || !text) return;
+
+    if (liveStatus === 1) {
+      meta.classList.add('is-live');
+      text.textContent = '直播已开始';
+    } else {
+      meta.classList.remove('is-live');
+      text.textContent = '直播信号 · 待发射';
+    }
+  }
+
+  async function checkLive() {
+    try {
+      const res = await fetch(LIVE_API);
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json?.code === 0) {
+        updateLiveStatus(json.data.live_status);
+      }
+    } catch {
+      // 接口挂了保持现状，不做任何事
+    }
+  }
+
+  checkLive();
+  setInterval(checkLive, 30_000);
+
+  // ── 头像对齐 ──
+  // 让 hero 头像的宽高 = "空予风" 三字的渲染宽度 (正方形 = 圆形剪裁)
+  // 监听 .zh 变化 (字号/字体加载完成/响应式断点) 重新对齐
+  function syncAvatarToZh() {
+    const zh = document.querySelector<HTMLElement>('.hero-title .zh');
+    const avatar = document.querySelector<HTMLElement>('.hero-title-row .hero-avatar');
+    if (!zh || !avatar) return;
+    const w = zh.getBoundingClientRect().width;
+    if (w > 0) {
+      avatar.style.setProperty('--hero-avatar-size', w + 'px');
+    }
+  }
+  function initAvatar() {
+    syncAvatarToZh();
+    const zh = document.querySelector<HTMLElement>('.hero-title .zh');
+    if (zh && 'ResizeObserver' in window) {
+      const ro = new ResizeObserver(() => syncAvatarToZh());
+      ro.observe(zh);
+    }
+    // 字体加载完后重新对齐 (webfont 切换会让 .zh 宽度变化)
+    if ('fonts' in document) {
+      (document as Document & { fonts: { ready: Promise<unknown> } }).fonts.ready.then(syncAvatarToZh);
+    }
+    window.addEventListener('resize', syncAvatarToZh);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAvatar);
+  } else {
+    initAvatar();
+  }
+</script>

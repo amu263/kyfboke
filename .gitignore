@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.production
+.DS_Store
+*.log
+content-manager/
+.agentmemory/
+.sisyphus/
+opencode.json
+INSTALL_LOG.md

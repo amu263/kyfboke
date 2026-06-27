@@ -1,0 +1,52 @@
+---
+/**
+ * 根布局 - 全站壳
+ */
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** 是否在首页(决定 hero 是否全屏) */
+  fullBleed?: boolean;
+}
+
+const {
+  title = '空予风',
+  description = '哔哩哔哩虚拟主播空予风的个人博客 - 直播日记、随笔、友链与作品',
+  fullBleed = false,
+} = Astro.props;
+
+const pageTitle = title === '空予风' ? title : `${title} · 空予风`;
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{pageTitle}</title>
+  </head>
+  <body>
+    <Header />
+    <main class:list={["page", { "page--full": fullBleed }]}>
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style is:global>
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: var(--sp-5) var(--sp-3);
+    min-height: calc(100vh - 200px);
+  }
+  .page--full {
+    max-width: none;
+    padding: 0;
+  }
+</style>

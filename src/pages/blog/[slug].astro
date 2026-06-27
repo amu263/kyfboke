@@ -1,0 +1,95 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map(post => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+<BaseLayout title={post.data.title} description={post.data.summary}>
+  <article class="post">
+    <header>
+      <p class="eyebrow">文章</p>
+      <h1>{post.data.title}</h1>
+      <p class="meta">
+        <time datetime={post.data.date.toISOString()}>
+          {post.data.date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </time>
+        {post.data.tags.length > 0 && (
+          <span class="tags">
+            {post.data.tags.map(t => <span>#{t}</span>)}
+          </span>
+        )}
+      </p>
+      <p class="summary">{post.data.summary}</p>
+    </header>
+
+    <div class="body">
+      <Content />
+    </div>
+
+    <footer class="post-footer">
+      <a href="/blog">← 回到文章列表</a>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .post { max-width: 720px; margin: 0 auto; }
+  header { padding-bottom: var(--sp-3); border-bottom: 1px solid var(--ink-line); margin-bottom: var(--sp-4); }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 0 0 var(--sp-1);
+  }
+  header h1 { margin: 0 0 var(--sp-2); }
+  .meta {
+    display: flex;
+    gap: var(--sp-2);
+    align-items: center;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--paper-dim);
+    margin: 0 0 var(--sp-3);
+  }
+  .tags { display: flex; gap: 6px; }
+  .tags span {
+    background: var(--ink-elevated);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .summary {
+    font-family: var(--font-display);
+    color: var(--paper-dim);
+    margin: 0;
+    font-size: var(--fs-md);
+  }
+  .body :global(p) { margin: 0 0 var(--sp-3); }
+  .body :global(h2) { margin-top: var(--sp-5); }
+  .body :global(h3) { margin-top: var(--sp-4); }
+  .body :global(blockquote) {
+    border-left: 3px solid var(--accent);
+    padding: 4px var(--sp-3);
+    color: var(--paper-dim);
+    margin: var(--sp-3) 0;
+    background: var(--ink-surface);
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  }
+  .post-footer {
+    margin-top: var(--sp-5);
+    padding-top: var(--sp-3);
+    border-top: 1px solid var(--ink-line);
+    text-align: center;
+  }
+</style>

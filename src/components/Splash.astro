@@ -1,0 +1,96 @@
+<div id="splash" class="splash" aria-hidden="true">
+  <div class="splash-text" id="splash-text"></div>
+</div>
+
+<script is:inline>
+  (function () {
+    const splash = document.getElementById('splash');
+    const textEl = document.getElementById('splash-text');
+    if (!splash || !textEl) return;
+
+    splash.classList.add('in');
+    const TEXT = '予你心动，乘风而行';
+    const TYPE_MS = 120, BACK_MS = 70, PAUSE_MS = 600;
+    let i = 0;
+
+    function type() {
+      if (i < TEXT.length) { textEl.textContent += TEXT[i]; i++; setTimeout(type, TYPE_MS); }
+      else setTimeout(backspace, PAUSE_MS);
+    }
+    function backspace() {
+      if (i > 0) { i--; textEl.textContent = textEl.textContent.slice(0, -1); setTimeout(backspace, BACK_MS); }
+      else rippleOut();
+    }
+    function rippleOut() {
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const maxR = Math.hypot(cx, cy) * 2;
+
+      for (let j = 0; j < 5; j++) {
+        const ring = document.createElement('div');
+        ring.className = 'splash-ripple';
+        ring.style.cssText = `left:${cx}px;top:${cy}px;animation-delay:${j * 160}ms;--r:${maxR}px;`;
+        splash.appendChild(ring);
+      }
+
+      splash.classList.add('disperse');
+      setTimeout(() => splash.remove(), 2500);
+    }
+
+    setTimeout(type, 650);
+  })();
+</script>
+
+<style>
+  .splash {
+    position: fixed; inset: 0; z-index: 99999;
+    background: #00AEEC;
+    display: flex; align-items: center; justify-content: center;
+    transform: translateY(-105%);
+    opacity: 1;
+  }
+  .splash.in {
+    transform: translateY(0);
+    transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .splash.disperse {
+    opacity: 0;
+    transition: opacity 900ms ease 400ms;
+    pointer-events: none;
+  }
+
+  .splash-text {
+    font-family: var(--font-display, 'Zen Maru Gothic', 'Noto Serif SC', system-ui, sans-serif);
+    font-weight: 900;
+    font-size: clamp(2rem, 8vw, 5rem);
+    color: #fff;
+    letter-spacing: 0.12em;
+    text-shadow: 0 4px 30px rgba(0,0,0,0.15);
+    min-height: 1.3em;
+    white-space: nowrap;
+    z-index: 2;
+    transition: opacity 300ms ease;
+  }
+  .splash.disperse .splash-text { opacity: 0; }
+
+  /* 水波纹 — box-shadow 扩散，不用 border 避免动画冲突 */
+  .splash-ripple {
+    position: absolute;
+    width: 0; height: 0;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: ripple-out 1400ms ease-out forwards;
+    pointer-events: none;
+  }
+
+  @keyframes ripple-out {
+    0%   { width: 0; height: 0; opacity: 0.7; box-shadow: 0 0 0 3px rgba(255,255,255,0.5), 0 0 40px rgba(255,255,255,0.2); }
+    100% { width: var(--r, 200vmax); height: var(--r, 200vmax); opacity: 0; box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 0 60px rgba(255,255,255,0.02); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .splash, .splash.in { transition: none; transform: none; }
+    .splash-ripple { animation: none; display: none; }
+    .splash.disperse { transition: none; opacity: 0; }
+  }
+</style>

@@ -1,0 +1,53 @@
+---
+/**
+ * 站点统计小组件 — 建站时间 + 浏览计数
+ */
+import siteData from '../data/site.json';
+
+const founded = new Date(siteData.founded);
+const now = new Date();
+const days = Math.floor((now.getTime() - founded.getTime()) / 86400000);
+const visits = siteData.visits || 0;
+---
+<div class="site-stats" id="site-stats">
+  <div class="stat-item">
+    <span class="stat-value" id="stat-days">{days}</span>
+    <span class="stat-label">天</span>
+  </div>
+  <span class="stat-divider" aria-hidden="true">·</span>
+  <div class="stat-item">
+    <span class="stat-value" id="stat-visits">{visits.toLocaleString()}</span>
+    <span class="stat-label">次浏览</span>
+  </div>
+</div>
+
+<style>
+  .site-stats {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: 0;
+    margin: 0;
+  }
+  .stat-item {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--paper);
+    letter-spacing: -0.02em;
+  }
+  .stat-label {
+    font-size: var(--fs-xs);
+    color: var(--paper-dim);
+  }
+  .stat-divider {
+    color: var(--ink-line);
+    font-size: var(--fs-md);
+    margin: 0 2px;
+  }
+</style>
